@@ -16,8 +16,12 @@ module.exports.deleteCard = (req, res) => {
     })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === 'NotFoundError' || err.name === 'CastError') {
+      if (err.name === 'NotFoundError') {
         res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
       } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла оошибка' });
     });
 };

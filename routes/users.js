@@ -7,6 +7,6 @@ router.get('/', getUsers);
 router.get('/:userId', getUserById);
 router.post('/', createUser);
 router.patch('/me', updateUserInfo);
-router.patch('/avatar', updateUserAvatar);
+router.patch('/me/avatar', updateUserAvatar);
 
 module.exports = router;

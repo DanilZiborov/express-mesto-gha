@@ -16,8 +16,12 @@ module.exports.getUserById = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'NotFoundError' || err.name === 'CastError') {
+      if (err.name === 'NotFoundError') {
         res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
       } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
@@ -35,7 +39,7 @@ module.exports.createUser = (req, res) => {
 
 module.exports.updateUserInfo = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user_id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .orFail(() => {
       const error = new Error();
       error.name = 'NotFoundError';
