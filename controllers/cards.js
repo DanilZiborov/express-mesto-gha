@@ -22,7 +22,7 @@ module.exports.deleteCard = (req, res) => {
       }
       if (err.name === 'CastError') {
         res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла оошибка' });
+      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
