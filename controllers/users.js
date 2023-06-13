@@ -25,7 +25,7 @@ module.exports.getUserById = (req, res) => {
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.stats(STATUS_CODES.CREATED).send({ data: user }))
+    .then((user) => res.status(STATUS_CODES.CREATED).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
