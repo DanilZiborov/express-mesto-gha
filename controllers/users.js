@@ -1,36 +1,74 @@
 const User = require('../models/user');
+const { STATUS_CODES } = require('../utils/STATUS_CODES');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch(() => res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
 };
 
 module.exports.getUserById = (req, res) => {
-  User.find({ _id: req.params.userId })
+  User.findById({ _id: req.params.userId })
+    .orFail(() => {
+      const error = new Error('Пользователь не найден');
+      error.name = 'NotFoundError';
+      throw error;
+    })
     .then((user) => res.send({ data: user }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'NotFoundError' || err.name === 'CastError') {
+        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
+      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    });
 };
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .then((user) => res.stats(STATUS_CODES.CREATED).send({ data: user }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
+      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    });
 };
 
 module.exports.updateUserInfo = (req, res) => {
-  console.log(req.user._id);
-  console.log(req.body);
-  User.findByIdAndUpdate(req.user._id, req.body, { new: true })
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user_id, { name, about }, { new: true, runValidators: true })
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'NotFoundError';
+      throw error;
+    })
     .then((user) => res.send({ data: user }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'NotFoundError' || err.name === 'CastError') {
+        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
+        return;
+      }
+      if (err.name === 'ValidationError') {
+        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
+      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    });
 };
 
 module.exports.updateUserAvatar = (req, res) => {
-  console.log(req.user._id);
-  console.log(req.body);
-  User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, { new: true })
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+    .orFail(() => {
+      const error = new Error();
+      error.name = 'NotFoundError';
+      throw error;
+    })
     .then((user) => res.send({ data: user }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'NotFoundError' || err.name === 'CastError') {
+        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
+        return;
+      }
+      if (err.name === 'ValidationError') {
+        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
+      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    });
 };

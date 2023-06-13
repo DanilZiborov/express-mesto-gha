@@ -21,5 +21,6 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
 });
