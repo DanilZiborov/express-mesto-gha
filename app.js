@@ -12,8 +12,6 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   req.user = { _id: '648883428ac9940096219611' };
-  console.log(mongoose.Error);
-
   next();
 });
 
