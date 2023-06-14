@@ -46,7 +46,7 @@ module.exports.updateUserInfo = (req, res) => {
         res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
         return;
       }
-      if (err instanceof mongoose.Error.ValidationErro) {
+      if (err instanceof mongoose.Error.ValidationError) {
         res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
       } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
