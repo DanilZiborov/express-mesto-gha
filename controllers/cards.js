@@ -9,12 +9,21 @@ module.exports.getCards = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findOne(({ _id: req.params.cardId }))
     .orFail(() => {
       const error = new mongoose.Error.DocumentNotFoundError();
       throw error;
     })
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card.owner._id.valueOf() === req.user._id) {
+        Card.findByIdAndRemove(req.params.cardId)
+          .then((deletedCard) => res.send({ data: deletedCard }));
+      } else {
+        const error = new Error();
+        error.name = 'AccessError';
+        throw error;
+      }
+    })
     .catch((err) => {
       if (err instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
@@ -22,6 +31,9 @@ module.exports.deleteCard = (req, res) => {
       }
       if (err instanceof mongoose.Error.CastError) {
         res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
+      }
+      if (err.name === 'AccessError') {
+        res.status(STATUS_CODES.FORBIDDEN).send({ message: 'Доступ запрещён' });
       } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
