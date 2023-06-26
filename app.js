@@ -1,10 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const { STATUS_CODES } = require('./utils/STATUS_CODES');
 
 const { login } = require('./controllers/users');
 const { createUser } = require('./controllers/users');
+
+const { NotFoundError } = require('./utils/errors/errors');
 
 const { PORT = 3000 } = process.env;
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
@@ -20,8 +21,22 @@ app.use('/cards', require('./routes/cards'));
 app.post('/signin', login);
 app.post('/signup', createUser);
 
-app.use((req, res) => {
-  res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Ресурс не найден' });
+app.use((req, res, next) => {
+  const err = new NotFoundError('Ресурс не найден');
+  next(err);
+});
+
+// тут линтер ругается, но, как я понял, четыре аргумента обязательны для обработчика ошибки
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
 });
 
 app.listen(PORT, () => {
