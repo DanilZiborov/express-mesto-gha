@@ -1,95 +1,61 @@
-const { default: mongoose } = require('mongoose');
 const Card = require('../models/card');
 const { STATUS_CODES } = require('../utils/STATUS_CODES');
+const { NotFoundError, ForbiddenError } = require('../utils/errors/errors');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла оошибка' }));
+    .then((cards) => {
+      res.send({ data: cards });
+    })
+    .catch(next);
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findOne(({ _id: req.params.cardId }))
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Карточка с таким id не найдена');
     })
     .then((card) => {
       if (card.owner._id.valueOf() === req.user._id) {
         Card.findByIdAndRemove(req.params.cardId)
           .then((deletedCard) => res.send({ data: deletedCard }));
       } else {
-        const error = new Error();
-        error.name = 'AccessError';
-        throw error;
+        throw new ForbiddenError('Отказано в доступе: удалять можно только свои карточки');
       }
     })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
-        return;
-      }
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      }
-      if (err.name === 'AccessError') {
-        res.status(STATUS_CODES.FORBIDDEN).send({ message: 'Доступ запрещён' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
   Card.create({ name, link, owner })
     .then((card) => res.status(STATUS_CODES.CREATED).send({ data: card }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла оошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true, runValidators: true },
   )
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Карточка с таким id не найдена');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
-        return;
-      }
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла оошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true },
   )
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Карточка с таким id не найдена');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
-        return;
-      }
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };

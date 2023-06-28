@@ -1,34 +1,25 @@
-const { default: mongoose } = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { STATUS_CODES } = require('../utils/STATUS_CODES');
+const { NotFoundError, ConflictError } = require('../utils/errors/errors');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById({ _id: req.params.userId })
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Пользователь с таким id не найден');
     })
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
-        return;
-      }
-      if (err instanceof mongoose.Error.CastError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -39,51 +30,33 @@ module.exports.createUser = (req, res) => {
     })
       .then((user) => res.status(STATUS_CODES.CREATED).send({ data: user }))
       .catch((err) => {
-        if (err instanceof mongoose.Error.ValidationError) {
-          res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные', errorMessage: err.message });
-        } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        if (err.code === 11000) {
+          next(new ConflictError('Этот email уже используется'));
+        }
       }));
 };
 
-module.exports.updateUserInfo = (req, res) => {
+module.exports.updateUserInfo = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Пользователь с таким id не найден');
     })
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
-        return;
-      }
-      if (err instanceof mongoose.Error.ValidationError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .orFail(() => {
-      const error = new mongoose.Error.DocumentNotFoundError();
-      throw error;
+      throw new NotFoundError('Пользователь с таким id не найден');
     })
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Пользователь c указанным id не найден' });
-        return;
-      }
-      if (err instanceof mongoose.Error.ValidationError) {
-        res.status(STATUS_CODES.BAD_REQUEST).send({ message: 'Некорректные данные' });
-      } else res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
-    });
+    .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -91,16 +64,14 @@ module.exports.login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, 'top-secret-key', { expiresIn: '7d' });
       res.status(STATUS_CODES.OK).send({ token });
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.getUserInfo = (req, res) => {
-  console.log('пам-пам');
+module.exports.getUserInfo = (req, res, next) => {
   User.findById({ _id: req.user._id })
+    .orFail(() => {
+      throw new NotFoundError('Пользователь с таким id не найден');
+    })
     .then((user) => res.send({ data: user }))
-    .catch(() => res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ message: 'Не удалось собрать инфу о пользователе(((' }));
+    .catch(next);
 };
