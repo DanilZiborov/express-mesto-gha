@@ -4,7 +4,7 @@ const usernameRule = Joi.string().min(2).max(30).default('Жак-Ив Кусто
 const userAboutRule = Joi.string().min(2).max(30).default('Исследователь');
 const userAvatarRule = Joi.string().regex(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/im).default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png');
 const userEmailRule = Joi.string().required().email();
-const userPasswordRule = Joi.string().min(8);
+const userPasswordRule = Joi.string().required().min(8);
 
 const objectIdRule = Joi.string().hex().length(24);
 
