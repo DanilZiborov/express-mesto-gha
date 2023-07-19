@@ -4,7 +4,7 @@ const usernameRule = Joi.string().min(2).max(30).default('Жак-Ив Кусто
 const userAboutRule = Joi.string().min(2).max(30).default('Исследователь');
 const userAvatarRule = Joi.string().regex(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/im).default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png');
 const userEmailRule = Joi.string().required().email();
-const userPasswordRule = Joi.string().required().min(8);
+const userPasswordRule = Joi.string().min(8);
 
 const objectIdRule = Joi.string().hex().length(24);
 
@@ -15,7 +15,7 @@ module.exports.userCreationValidator = {
     avatar: userAvatarRule,
     email: userEmailRule,
     password: userPasswordRule,
-  }).unknown(true),
+  }),
 };
 
 module.exports.userDataValidator = {
@@ -23,7 +23,7 @@ module.exports.userDataValidator = {
     name: usernameRule,
     about: userAboutRule,
     avatar: userAvatarRule,
-  }).unknown(true),
+  }),
 };
 
 module.exports.cardValidator = {
@@ -33,7 +33,13 @@ module.exports.cardValidator = {
   }).unknown(true),
 };
 
-module.exports.objectIdParamsValidator = {
+module.exports.userIdParamsValidator = {
+  params: Joi.object().keys({
+    userId: objectIdRule,
+  }),
+};
+
+module.exports.cardIdParamsValidator = {
   params: Joi.object().keys({
     cardId: objectIdRule,
   }),

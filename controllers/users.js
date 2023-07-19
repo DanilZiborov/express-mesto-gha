@@ -28,7 +28,11 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     })
-      .then((user) => res.status(STATUS_CODES.CREATED).send({ data: user }))
+      .then((user) => {
+        const userObject = user.toObject();
+        delete userObject.password;
+        res.status(STATUS_CODES.CREATED).send({ data: userObject });
+      })
       .catch((err) => {
         if (err.code === 11000) {
           next(new ConflictError('Этот email уже используется'));
