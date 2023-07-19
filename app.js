@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cookieParser = require('cookie-parser');
 const { celebrate, errors } = require('celebrate');
 
 const { login } = require('./controllers/users');
@@ -11,11 +10,10 @@ const { NotFoundError } = require('./utils/errors/errors');
 const { userCreationValidator } = require('./utils/validators');
 
 const { PORT = 3000 } = process.env;
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 const app = express();
 
-app.use(cookieParser());
 app.use(express.json());
 
 app.use('/users', require('./routes/users'));

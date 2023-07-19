@@ -24,7 +24,11 @@ const userSchema = new mongoose.Schema({
       message: 'Емаил отстой, валидатор сработал',
     },
   },
-  password: {},
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
 });
 
 userSchema.statics.findUserByCredentials = function (email, password) {
