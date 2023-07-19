@@ -4,12 +4,12 @@ const auth = require('../middlewares/auth');
 const {
   getCards, deleteCard, createCard, likeCard, dislikeCard,
 } = require('../controllers/cards');
-const { cardCreationValidator, cardIdValidator } = require('../utils/validators');
+const { cardValidator, objectIdParamsValidator } = require('../utils/validators');
 
 router.get('/', auth, getCards);
-router.delete('/:cardId', celebrate(cardIdValidator), auth, deleteCard);
-router.post('/', auth, celebrate(cardCreationValidator), createCard);
-router.put('/:cardId/likes', auth, celebrate(cardIdValidator), likeCard);
-router.delete('/:cardId/likes', auth, celebrate(cardIdValidator), dislikeCard);
+router.delete('/:cardId', celebrate(objectIdParamsValidator), auth, deleteCard);
+router.post('/', auth, celebrate(cardValidator), createCard);
+router.put('/:cardId/likes', auth, celebrate(objectIdParamsValidator), likeCard);
+router.delete('/:cardId/likes', auth, celebrate(objectIdParamsValidator), dislikeCard);
 
 module.exports = router;
