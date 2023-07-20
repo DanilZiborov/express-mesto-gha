@@ -3,16 +3,33 @@ const bcrypt = require('bcrypt');
 const { UnauthorizedError } = require('../utils/errors/errors');
 
 const userSchema = new mongoose.Schema({
-  name: {},
-  about: {},
-  avatar: {},
+  name: {
+    type: String,
+    minlength: 2,
+    maxlength: 30,
+  },
+  about: {
+    type: String,
+    minlength: 2,
+    maxlength: 30,
+  },
+  avatar: {
+    type: String,
+    validate: {
+      validator: (v) => /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/im.test(v),
+      message: 'Некорректный url аватара пользователя',
+
+    },
+  },
   email: {
     type: String,
-    required: true,
     unique: true,
+    required: true,
+
   },
   password: {
     type: String,
+    required: true,
     select: false,
   },
 });

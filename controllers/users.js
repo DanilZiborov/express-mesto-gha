@@ -1,8 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { MongooseError } = require('mongoose');
 const User = require('../models/user');
 const { STATUS_CODES } = require('../utils/STATUS_CODES');
-const { NotFoundError, ConflictError } = require('../utils/errors/errors');
+const {
+  NotFoundError, ConflictError, InternalServerError, BadRequestError,
+} = require('../utils/errors/errors');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -34,9 +37,11 @@ module.exports.createUser = (req, res, next) => {
         res.status(STATUS_CODES.CREATED).send({ data: userObject });
       })
       .catch((err) => {
-        if (err.code === 11000) {
+        if (err instanceof MongooseError.ValidationError) {
+          next(new BadRequestError(err.message));
+        } else if (err.code === 11000) {
           next(new ConflictError('Этот email уже используется'));
-        }
+        } else { next(new InternalServerError('На сервере произошла ошибка')); }
       }));
 };
 
