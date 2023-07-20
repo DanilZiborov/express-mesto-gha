@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema({
     validate: {
       validator: (v) => /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/im.test(v),
       message: 'Некорректный url аватара пользователя',
-
     },
   },
   email: {
