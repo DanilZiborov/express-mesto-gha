@@ -17,7 +17,7 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .then((card) => {
       if (card.owner._id.valueOf() === req.user._id) {
-        Card.deleteOne(req.params.cardId)
+        Card.deleteOne({ _id: req.params.cardId })
           .then((deletedCard) => res.send({ data: deletedCard }));
       } else {
         throw new ForbiddenError('Отказано в доступе: удалять можно только свои карточки');
