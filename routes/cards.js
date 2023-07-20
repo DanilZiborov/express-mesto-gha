@@ -8,8 +8,8 @@ const { cardValidator, cardIdParamsValidator } = require('../utils/validators');
 
 router.get('/', auth, getCards);
 router.delete('/:cardId', celebrate(cardIdParamsValidator), auth, deleteCard);
-router.post('/', auth, celebrate(cardValidator), createCard);
-router.put('/:cardId/likes', auth, celebrate(cardIdParamsValidator), likeCard);
-router.delete('/:cardId/likes', auth, celebrate(cardIdParamsValidator), dislikeCard);
+router.post('/', celebrate(cardValidator), auth, createCard);
+router.put('/:cardId/likes', celebrate(cardIdParamsValidator), auth, likeCard);
+router.delete('/:cardId/likes', celebrate(cardIdParamsValidator), auth, dislikeCard);
 
 module.exports = router;

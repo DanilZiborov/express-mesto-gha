@@ -8,8 +8,8 @@ const { userIdParamsValidator, userDataValidator } = require('../utils/validator
 
 router.get('/', auth, getUsers);
 router.get('/me', auth, getUserInfo);
-router.get('/:userId', auth, celebrate(userIdParamsValidator), getUserById);
-router.patch('/me', auth, celebrate(userDataValidator), updateUserInfo);
-router.patch('/me/avatar', auth, celebrate(userDataValidator), updateUserAvatar);
+router.get('/:userId', celebrate(userIdParamsValidator), auth, getUserById);
+router.patch('/me', celebrate(userDataValidator), auth, updateUserInfo);
+router.patch('/me/avatar', celebrate(userDataValidator), auth, updateUserAvatar);
 
 module.exports = router;
